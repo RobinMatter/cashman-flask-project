@@ -215,11 +215,11 @@ def add_expense():
     transactions.append(expense)
     return "", 204
 
-@app.route('/welcome')
+@app.route("/welcome")
 @cross_origin(headers=["Content-Type", "Authorization"])
-print("hey")
-
-
+def welcome():
+    response = "Hello thanks for your interest."
+    return jsonify(message=response)
 
 
 if __name__ == "__main__":
