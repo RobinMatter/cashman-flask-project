@@ -1,7 +1,5 @@
 from flask import Flask, jsonify, request
-########################################################################################################################
-import createAuth0Client from '@auth0/auth0-spa-js';
-########################################################################################################################
+
 from cashman.model.expense import Expense, ExpenseSchema
 from cashman.model.income import Income, IncomeSchema
 from cashman.model.transaction_type import TransactionType
@@ -216,6 +214,12 @@ def add_expense():
     expense = ExpenseSchema().load(request.get_json())
     transactions.append(expense)
     return "", 204
+
+@app.route('/welcome')
+@cross_origin(headers=["Content-Type", "Authorization"])
+print("hey")
+
+
 
 
 if __name__ == "__main__":
