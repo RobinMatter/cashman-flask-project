@@ -136,8 +136,37 @@ def requires_scope(required_scope):
     return False
 
 
+# Controllers API
+
+# This doesn't need authentication
+@app.route("/api/public")
+@cross_origin(headers=["Content-Type", "Authorization"])
+def public():
+    response = "Hello from a public endpoint! You don't need to be authenticated to see this."
+    return jsonify(message=response)
 
 
+# This needs authentication
+@app.route("/api/private")
+@cross_origin(headers=["Content-Type", "Authorization"])
+@requires_auth
+def private():
+    response = "Hello from a private endpoint! You need to be authenticated to see this."
+    return jsonify(message=response)
+
+
+# This needs authorization
+@app.route("/api/private-scoped")
+@cross_origin(headers=["Content-Type", "Authorization"])
+@requires_auth
+def private_scoped():
+    if requires_scope("read:messages"):
+        response = "Hello from a private endpoint! You need to be authenticated and have a scope of read:messages to see this."
+        return jsonify(message=response)
+    raise AuthError({
+        "code": "Unauthorized",
+        "description": "You don't have access to this resource"
+    }, 403)
 
 
 ########################################################################################################################
@@ -149,16 +178,7 @@ transactions = [
 ]
 
 
-# Controllers API
-
-# This doesn't need authentication
-@app.route("/api/public")
-@cross_origin(headers=["Content-Type", "Authorization"])
-def public():
-    response = "Hello from a public endpoint! You don't need to be authenticated to see this."
-    return jsonify(message=response)
-
-@app.route('/api/public/incomes')
+@app.route('/incomes')
 @cross_origin(headers=["Content-Type", "Authorization"])
 @requires_auth
 def get_incomes():
@@ -169,13 +189,31 @@ def get_incomes():
     return jsonify(incomes)
 
 
-@app.route('/api/public/incomes', methods=['POST'])
+@app.route('/incomes', methods=['POST'])
+@cross_origin(headers=["Content-Type", "Authorization"])
+@requires_auth
 def add_income():
     income = IncomeSchema().load(request.get_json())
     transactions.append(income)
     return "", 204
 
 
+@app.route('/expenses')
+@cross_origin(headers=["Content-Type", "Authorization"])
+def get_expenses():
+    schema = ExpenseSchema(many=True)
+    expenses = schema.dump(
+        filter(lambda t: t.type == TransactionType.EXPENSE, transactions)
+    )
+    return jsonify(expenses)
+
+
+@app.route('/expenses', methods=['POST'])
+@cross_origin(headers=["Content-Type", "Authorization"])
+def add_expense():
+    expense = ExpenseSchema().load(request.get_json())
+    transactions.append(expense)
+    return "", 204
 
 
 if __name__ == "__main__":
